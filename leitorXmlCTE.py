@@ -1,4 +1,3 @@
-from codecs import decode
 import os
 import leitorDados as lD
 from leitorDados import formatarIndexador
@@ -63,3 +62,4 @@ df = pd.DataFrame(Dados)
 arquivoSaida = input(" Dados lidos com sucesso!\n Qual o caminho do diretório de saída? ")
 
 df.to_excel(f'{arquivoSaida}/notas.xlsx')
+
