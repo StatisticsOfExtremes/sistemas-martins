@@ -1,3 +1,4 @@
+
 from fileinput import close
 import requests
 from datetime import datetime
@@ -5,84 +6,113 @@ import os
 from dotenv import load_dotenv
 from dateutil.relativedelta import relativedelta
 
-load_dotenv()
 
-CNPJ = os.environ.get("CNPJ")
-CPF = os.environ.get("CPF")
-IE = os.environ.get("IE")
-SENHA = os.environ.get("SENHA")
+def download_ctes(export_path = 'notas.zip'):
+    """
+    Retona o nome do arquivo do download das notas dos CTES
 
+    @param export_path<string>: caminho para o download dos arquivos.
 
-headers = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-}
-
-raw_path = "https://sistemasmartins.com.br/"
-
-acess_path = raw_path + "Acesso/"
+    @return <None>
+    """
 
 
-"""
-curl --verbose --data-urlencode "txt_cnpj=35.079.122/0001-08&txt_ie=&txt_cpf=048.905.593-74&txt_senha=trans2019" https://sistemasmartins.com.br/Acesso 
---next --data-urlencode "mes=9
-&ano=2022
-&tipo_nota=3
-&tipo_cliente=0
-&cpf_cnpj=
-&dia_inicial=1
-&dia_final=31" https://sistemasmartins.com.br/Relatorio_Cte/BuscaListaCte 
+    load_dotenv()
+
+    CNPJ = os.environ.get("CNPJ")
+    CPF = os.environ.get("CPF")
+    IE = os.environ.get("IE")
+    SENHA = os.environ.get("SENHA")
+
+
+    headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+    }
+
+    session = requests.Session()
+
+    raw_path = "https://sistemasmartins.com.br/"
+
+    acess_path = raw_path + "Acesso/Index"
+
+
+    """
+    curl --verbose --data-urlencode "txt_cnpj=35.079.122/0001-08&txt_ie=&txt_cpf=048.905.593-74&txt_senha=trans2019" https://sistemasmartins.com.br/Acesso 
+    --next --data-urlencode "mes=9
+    &ano=2022
+    &tipo_nota=3
+    &tipo_cliente=0
+    &cpf_cnpj=
+    &dia_inicial=1
+    &dia_final=31" https://sistemasmartins.com.br/Relatorio_Cte/BuscaListaCte 
 
 
 
---next "https://sistemasmartins.com.br//Relatorio_Cte/Baixar_XML?mes=9&ano=2022&tipo_nota=3&tipo_cliente=0&cpf_cnpj=&dia_inicial=1&dia_final=31" --output notas.zip
-"""
+    --next "https://sistemasmartins.com.br//Relatorio_Cte/Baixar_XML?mes=9&ano=2022&tipo_nota=3&tipo_cliente=0&cpf_cnpj=&dia_inicial=1&dia_final=31" --output notas.zip
+    """
 
-form_acesso = {
-    "txt_cnpj": CNPJ,
-    "txt_ie":IE,
-    "txt_cpf": CPF,
-    "txt_senha": SENHA
-}
+    form_acesso = {
+        "txt_cnpj": CNPJ,
+        "txt_ie":IE,
+        "txt_cpf": CPF,
+        "txt_senha": SENHA,
+        "manter_cookie":'on'
+    }
 
-rAcesso = requests.post(acess_path, data = form_acesso)
+    response_session = session.get(acess_path, data = form_acesso, allow_redirects=True)
 
-print(f"Status {rAcesso.status_code} - Para o acesso")
+    session_cookie = response_session.cookies.get_dict()
 
+    rAcesso = session.post(acess_path, data = form_acesso, allow_redirects=True, cookies=session_cookie)
 
-#Dados para pegar as notas
-HOJE = datetime.now()
-
-TIPO_DE_NOTA = 3
-TIPO_CLIENTE = 0
-CPF_CNPJ = ''
-DIA_INICIAL = 1
-DIA_FINAL = (datetime(HOJE.year, HOJE.month, 1) + relativedelta(months=1, days=-1)).day
-ANO = HOJE.year
-MES = HOJE.month
-
-form_buscar_cte = {
-    'mes': MES,
-    'ano': ANO,
-    'tipo_nota': TIPO_DE_NOTA,
-    'tipo_cliente':TIPO_CLIENTE,
-    'cpf_cnpj': CPF_CNPJ,
-    'dia_inicial': DIA_INICIAL,
-    'dia_final':DIA_FINAL
-}
+    print(f"Status \x1b[5;34,42m {rAcesso.status_code} \x1b[0m - Para o acesso\n")
 
 
-path_buscar_cte =  'Relatorio_Cte/BuscaListaCte' 
+    #Dados para pegar as notas
+    HOJE = datetime.now()
 
-reqBuscarCte = requests.post(raw_path + path_buscar_cte, data = form_buscar_cte )
+    TIPO_DE_NOTA = 3
+    TIPO_CLIENTE = 0
+    CPF_CNPJ = ''
+    DIA_INICIAL = 1
+    DIA_FINAL = (datetime(HOJE.year, HOJE.month, 1) + relativedelta(months=1, days=-1)).day
+    ANO = HOJE.year
+    MES = HOJE.month
 
-print(reqBuscarCte.status_code)
+    form_buscar_cte = {
+        'mes': MES,
+        'ano': ANO,
+        'tipo_nota': TIPO_DE_NOTA,
+        'tipo_cliente':TIPO_CLIENTE,
+        'cpf_cnpj': CPF_CNPJ,
+        'dia_inicial': DIA_INICIAL,
+        'dia_final':DIA_FINAL
+    }
 
-path_baixar_cte = 'Relatorio_Cte/Baixar_XML'
 
-reqBaixarCte = requests.get(raw_path + path_baixar_cte, params= form_buscar_cte, stream = True)
 
-print(reqBaixarCte.status_code)
 
-with open('notas.zip', 'wb') as fd:
-    for chunk in reqBaixarCte.iter_content(chunk_size = 8124):
-        fd.write(chunk)
+    path_buscar_cte =  'Relatorio_Cte/BuscaListaCte' 
+
+    print(f"Buscando os CTE's...")
+
+    reqBuscarCte = session.post(raw_path + path_buscar_cte, data = form_buscar_cte, cookies=session_cookie)
+
+    path_baixar_cte = 'Relatorio_Cte/Baixar_XML/'
+
+
+
+    print(f"CTE's encontrandos, baixando os arquivos")
+
+    header_baixar = {
+        "Content-Type": "application/zip"
+    }
+
+    reqBaixarCte = session.get(raw_path + path_baixar_cte, params= form_buscar_cte, stream = True, headers=header_baixar, cookies=session_cookie)
+
+
+    with open(export_path, 'wb') as fd:
+        for chunk in reqBaixarCte.iter_content(chunk_size = 8124):
+            fd.write(chunk)
+
+    print(f"Arquivos baixados!\nExtraindo os arquivos")
