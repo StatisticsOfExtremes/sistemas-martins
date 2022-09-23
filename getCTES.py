@@ -36,21 +36,6 @@ def download_ctes(export_path = 'notas.zip'):
     acess_path = raw_path + "Acesso/Index"
 
 
-    """
-    curl --verbose --data-urlencode "txt_cnpj=35.079.122/0001-08&txt_ie=&txt_cpf=048.905.593-74&txt_senha=trans2019" https://sistemasmartins.com.br/Acesso 
-    --next --data-urlencode "mes=9
-    &ano=2022
-    &tipo_nota=3
-    &tipo_cliente=0
-    &cpf_cnpj=
-    &dia_inicial=1
-    &dia_final=31" https://sistemasmartins.com.br/Relatorio_Cte/BuscaListaCte 
-
-
-
-    --next "https://sistemasmartins.com.br//Relatorio_Cte/Baixar_XML?mes=9&ano=2022&tipo_nota=3&tipo_cliente=0&cpf_cnpj=&dia_inicial=1&dia_final=31" --output notas.zip
-    """
-
     form_acesso = {
         "txt_cnpj": CNPJ,
         "txt_ie":IE,
